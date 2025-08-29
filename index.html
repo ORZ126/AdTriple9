@@ -3,215 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>٩٩٩ لأرقام السيارات — سحب مضبوط</title>
+  <title>٩٩٩ لأرقام السيارات</title>
 
-  <!-- Tajawal -->
+  <!-- Google Font (Tajawal) لواجهة النصوص -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet" />
-  <!-- html2canvas -->
+
+  <!-- Preload للخط الخاص (fe.ttf) بمسار نسبي يناسب GitHub Pages -->
+  <link rel="preload" as="font" href="./fe.ttf" type="font/ttf">
+
+  <!-- html2canvas للتحويل لصورة -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
-    @font-face { font-family:'FE-Schrift'; src:url('FE.TTF') format('truetype'); font-display:swap; }
-    :root{ --digits-font:'FE-Schrift','Tajawal',sans-serif; --canvas-w:540px; --canvas-h:960px; }
+    /* تعريف الخط الخاص من نفس المجلد */
+    @font-face{
+      font-family:'FE-Schrift';
+      src: url('./fe.ttf') format('truetype');
+      font-display: swap;
+    }
+
+    :root{
+      --digits-font:'FE-Schrift','Tajawal',sans-serif;
+      --canvas-w:540px;   /* 9:16 */
+      --canvas-h:960px;
+    }
 
     body{font-family:'Tajawal',sans-serif;background:#e9e9e9;padding:16px;text-align:center}
     h2{margin:8px 0 14px}
 
+    /* مساحة التصميم */
     #capture{
       width:var(--canvas-w);height:var(--canvas-h);margin:0 auto;
-      background:url('bg-9x16.png') no-repeat center/cover;
+      background:url('./bg-9x16.png') no-repeat center/cover;
       position:relative; overflow:hidden; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.08);
     }
 
+    /* سحب */
     .draggable{ position:absolute; touch-action:none; cursor:move; }
     .plate{ user-select:none }
     .plate>img{ width:100%; height:100%; display:block }
     .zone{ position:absolute; display:flex; align-items:center; justify-content:center; pointer-events:auto; }
     .car-img{width:500px;height:auto;display:block}
 
-    .top-category,.car-category{font-family:var(--digits-font);line-height:1;color:#fff;text-shadow:0 0 1px rgba(0,0,0,.35)}
-    .top-number,.car-number{font-family:var(--digits-font);line-height:1;color:#000;letter-spacing:.04em}
+    /* تأكيد الخط للأرقام */
+    .digits-only{
+      font-family: var(--digits-font) !important;
+      font-variant-numeric: lining-nums;
+    }
+
+    .top-category,.car-category{line-height:1;color:#fff;text-shadow:0 0 1px rgba(0,0,0,.35)}
+    .top-number,.car-number{line-height:1;color:#000;letter-spacing:.04em}
 
     .price{font-size:26px;font-weight:700;color:#111;background:transparent;padding:6px 12px;border-radius:10px;user-select:none}
+    .price .label{margin-left:6px;color:#000;font-weight:400}
 
     .controls{margin-top:14px;display:flex;flex-wrap:wrap;gap:10px 12px;justify-content:center}
     .controls label{font-size:14px}
     .controls input,.controls button,.controls select{padding:8px 12px;font-size:15px;font-family:'Tajawal',sans-serif}
-
-    /* ==== لوحة تحكم القياسات (إضافة فقط) ==== */
-    .sizes-panel{width:min(980px,95%);margin:14px auto 0;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));text-align:right}
-    .sizes-panel .box{background:#fff;border-radius:10px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-    .sizes-panel .box h4{margin:0 0 6px;font-size:14px}
-    .sizes-panel label{display:block;font-size:12px;margin:8px 0 2px}
-    .sizes-panel input[type="range"]{width:100%}
-    .sizes-actions{margin:10px auto 0;display:flex;gap:10px;justify-content:center}
-    .sizes-actions button{padding:8px 12px}
-    .hint{font-size:12px;color:#555;margin-top:6px}
   </style>
 </head>
 <body>
 
-  <h2>تصميم لوحة سيارة أبوظبي — تحريك مستقل مضبوط</h2>
+  <h2>تصميم لوحة سيارة أبوظبي</h2>
 
   <div id="capture">
     <!-- اللوحة العلوية (تتحرك داخل #capture) -->
     <div class="plate draggable" id="topPlate" style="left:20px; top:20px; width:500px; height:110px;">
-      <img src="plate-real.png" alt="لوحة علوية">
+      <img src="./plate-real.png" alt="لوحة علوية">
       <!-- الفئة (تتحرك داخل topPlate فقط) -->
       <div class="zone draggable" id="topCatZone" style="left:12px; top:8px; width:120px; height:94px;">
-        <div class="top-category" id="topCategory" style="font-size:44px;">1</div>
+        <div class="top-category digits-only" id="topCategory" style="font-size:44px;">1</div>
       </div>
       <!-- الرقم (تتحرك داخل topPlate فقط) -->
       <div class="zone draggable" id="topNumZone" style="left:200px; top:6px; width:300px; height:98px;">
-        <div class="top-number" id="topNumber" style="font-size:78px;">12345</div>
+        <div class="top-number digits-only" id="topNumber" style="font-size:78px;">12345</div>
       </div>
     </div>
 
     <!-- السيارة (تتحرك داخل #capture) -->
     <div class="draggable" id="carContainer" style="left:20px; top:220px;">
-      <img src="defender.png" class="car-img" alt="السيارة" id="carImg">
+      <img src="./defender.png" class="car-img" alt="السيارة" id="carImg">
     </div>
 
     <!-- اللوحة السفلية (تتحرك داخل #capture) -->
     <div class="plate draggable" id="carPlate" style="left:210px; top:520px; width:150px; height:35px;">
-      <img src="plate-real.png" alt="لوحة سفلية">
+      <img src="./plate-real.png" alt="لوحة سفلية">
       <!-- الفئة (تتحرك داخل carPlate فقط) -->
       <div class="zone draggable" id="carCatZone" style="left:8px; top:0; width:35%; height:100%;">
-        <div class="car-category" id="bottomCategory" style="font-size:10px;">1</div>
+        <div class="car-category digits-only" id="bottomCategory" style="font-size:10px;">1</div>
       </div>
       <!-- الرقم (تتحرك داخل carPlate فقط) -->
       <div class="zone draggable" id="carNumZone" style="left:42px; top:0; width:62%; height:100%;">
-        <div class="car-number" id="bottomNumber" style="font-size:16px;">12345</div>
+        <div class="car-number digits-only" id="bottomNumber" style="font-size:16px;">12345</div>
       </div>
     </div>
 
     <!-- السعر (يتحرك داخل #capture) -->
     <div class="price draggable" id="price" style="left:150px; top:760px;">
-      <span class="label">السعر:</span><span id="platePrice">250,000 درهم</span>
+      <span class="label">السعر:</span>
+      <span id="platePrice" class="digits-only">250,000 درهم</span>
     </div>
   </div>
 
-  <!-- التحكّم (نفسه) -->
+  <!-- التحكّم -->
   <div class="controls">
     <label>السيارة:
       <select id="carSelect">
-        <option value="defender" selected>Land Rover Defender (front)</option>
-        <option value="defender_octa">Land Rover Defender Octa</option>
-        <option value="g_class_brabus">Brabus G-Class (front)</option>
-        <option value="g_class">Mercedes G-Class (black)</option>
-        <option value="g_class_white">Mercedes G-Class (white)</option>
-        <option value="gtr_grey">Porsche 911 GT3 RS (front, grey)</option>
-        <option value="gtr_green">Porsche 911 GT3 RS (rear, green)</option>
-        <option value="gtr_w">Porsche 911 GT3 RS (rear, white)</option>
-        <option value="patrol_nismo">Nissan Patrol NISMO (front)</option>
-        <option value="range_rover_b">Range Rover (rear)</option>
-        <option value="range_rover_brown">Range Rover (front, brown)</option>
-        <option value="rr_white">Rolls-Royce Cullinan (front)</option>
+        <option value="defender" selected>Land Rover Defender</option>
+        <option value="g_class">Mercedes G-Class</option>
+        <option value="patrol_nismo">Nissan Patrol NISMO</option>
       </select>
     </label>
 
-    <label>فئة الرقم: <input type="text" id="inputCategory" value="1"></label>
-    <label>رقم اللوحة: <input type="text" id="inputNumber" value="12345"></label>
-    <label>السعر (درهم): <input type="text" id="inputPrice" value="250000"></label>
+    <label>فئة الرقم: <input type="text" id="inputCategory" value="1" inputmode="numeric"></label>
+    <label>رقم اللوحة: <input type="text" id="inputNumber" value="12345" inputmode="numeric"></label>
+    <label>السعر (درهم): <input type="text" id="inputPrice" value="250000" inputmode="numeric"></label>
 
     <button id="btnUpdate">تحديث</button>
     <button id="btnDownload">📸 تحميل الصورة</button>
   </div>
 
-  <!-- ==== لوحة تحكم القياسات (إضافة فقط) ==== -->
-  <div class="sizes-panel" id="sizesPanel">
-    <!-- العلوية -->
-    <div class="box">
-      <h4>اللوحة العلوية</h4>
-      <label>عرض اللوحة (px) <span id="sp_topPlateW"></span></label>
-      <input type="range" id="sl_topPlateW" min="250" max="800" step="1">
-      <label>ارتفاع اللوحة (px) <span id="sp_topPlateH"></span></label>
-      <input type="range" id="sl_topPlateH" min="60" max="200" step="1">
-    </div>
-    <div class="box">
-      <h4>فئة (علوية)</h4>
-      <label>عرض المنطقة (px) <span id="sp_topCatW"></span></label>
-      <input type="range" id="sl_topCatW" min="40" max="260" step="1">
-      <label>ارتفاع المنطقة (px) <span id="sp_topCatH"></span></label>
-      <input type="range" id="sl_topCatH" min="30" max="180" step="1">
-      <label>حجم الخط (px) <span id="sp_topCatF"></span></label>
-      <input type="range" id="sl_topCatF" min="20" max="100" step="1">
-    </div>
-    <div class="box">
-      <h4>رقم (علوية)</h4>
-      <label>عرض المنطقة (px) <span id="sp_topNumW"></span></label>
-      <input type="range" id="sl_topNumW" min="120" max="420" step="1">
-      <label>ارتفاع المنطقة (px) <span id="sp_topNumH"></span></label>
-      <input type="range" id="sl_topNumH" min="40" max="190" step="1">
-      <label>حجم الخط (px) <span id="sp_topNumF"></span></label>
-      <input type="range" id="sl_topNumF" min="30" max="140" step="1">
-    </div>
-
-    <!-- السيارة -->
-    <div class="box">
-      <h4>صورة السيارة</h4>
-      <label>عرض الصورة (px) <span id="sp_carImgW"></span></label>
-      <input type="range" id="sl_carImgW" min="280" max="820" step="1">
-    </div>
-
-    <!-- السفلية -->
-    <div class="box">
-      <h4>اللوحة السفلية</h4>
-      <label>عرض اللوحة (px) <span id="sp_carPlateW"></span></label>
-      <input type="range" id="sl_carPlateW" min="90" max="320" step="1">
-      <label>ارتفاع اللوحة (px) <span id="sp_carPlateH"></span></label>
-      <input type="range" id="sl_carPlateH" min="24" max="120" step="1">
-    </div>
-    <div class="box">
-      <h4>فئة (سفلية)</h4>
-      <label>عرض المنطقة (px) <span id="sp_carCatW"></span></label>
-      <input type="range" id="sl_carCatW" min="24" max="200" step="1">
-      <label>ارتفاع المنطقة (px) <span id="sp_carCatH"></span></label>
-      <input type="range" id="sl_carCatH" min="20" max="120" step="1">
-      <label>حجم الخط (px) <span id="sp_carCatF"></span></label>
-      <input type="range" id="sl_carCatF" min="8" max="42" step="1">
-    </div>
-    <div class="box">
-      <h4>رقم (سفلية)</h4>
-      <label>عرض المنطقة (px) <span id="sp_carNumW"></span></label>
-      <input type="range" id="sl_carNumW" min="40" max="260" step="1">
-      <label>ارتفاع المنطقة (px) <span id="sp_carNumH"></span></label>
-      <input type="range" id="sl_carNumH" min="20" max="120" step="1">
-      <label>حجم الخط (px) <span id="sp_carNumF"></span></label>
-      <input type="range" id="sl_carNumF" min="10" max="60" step="1">
-    </div>
-
-    <!-- السعر -->
-    <div class="box">
-      <h4>السعر</h4>
-      <label>حجم خط السعر (px) <span id="sp_priceF"></span></label>
-      <input type="range" id="sl_priceF" min="14" max="64" step="1">
-    </div>
-  </div>
-
-  <div class="sizes-actions">
-    <button id="btnSaveSizes">💾 حفظ القياسات</button>
-    <button id="btnResetSizes">↺ إعادة القياسات الافتراضية</button>
-  </div>
-  <div class="hint">ملاحظة: هذا الحفظ خاص بالقياسات فقط (داخل المتصفح). حفظ المواقع لا يزال كما في كودك الأصلي.</div>
-
   <script>
-    /* === صور السيارات (تأكدي من وجودها في نفس المجلد) === */
+    /* صور السيارات (استخدمي مسارات نسبية) */
     const CAR_PRESETS = {
-      defender:        { img:'defender.png' },
-      defender_octa:   { img:'defender_octa.png' },
-      g_class_brabus:  { img:'g_class_brabus.png' },
-      g_class:         { img:'g_class.png' },
-      g_class_white:   { img:'g_class_white.png' },
-      gtr_grey:        { img:'gtr_grey.png' },
-      gtr_green:       { img:'gtr_green.png' },
-      gtr_w:           { img:'gtr_w.png' },
-      patrol_nismo:    { img:'nissan.png' },
-      range_rover_b:   { img:'range_rover_b.png' },
-      range_rover_brown:{img:'rantha.png' },
-      rr_white:        { img:'rr.png' }
+      defender:{ img:'./defender.png' },
+      g_class:{ img:'./g_class.png' },
+      patrol_nismo:{ img:'./nissan.png' }
     };
 
+    /* عناصر DOM أساسية */
     const captureEl   = document.getElementById('capture');
     const topPlateEl  = document.getElementById('topPlate');
     const topCatZone  = document.getElementById('topCatZone');
@@ -224,9 +144,9 @@
     const priceEl     = document.getElementById('price');
 
     const priceFmt = new Intl.NumberFormat('ar-AE');
-    const digitsOnly = (s)=> (s||'').toString().replace(/[^0-9]/g,'');
+    const onlyDigits = (s)=> (s||'').toString().replace(/[^0-9]/g,'');
 
-    /* === سحب مضبوط داخل حاوية محددة، مع إيقاف انتشار الحدث === */
+    /* سحب مضبوط داخل الحاويات المخصّصة */
     function makeDraggable(el, boundsEl){
       let startX=0, startY=0, origL=0, origT=0, dragging=false;
       const pt = (e)=> e.touches ? {x:e.touches[0].clientX,y:e.touches[0].clientY} : {x:e.clientX,y:e.clientY};
@@ -238,9 +158,7 @@
         const r = el.getBoundingClientRect();
         const b = (boundsEl||el.parentElement).getBoundingClientRect();
         startX = p.x; startY = p.y;
-        origL = r.left - b.left;
-        origT = r.top  - b.top;
-
+        origL = r.left - b.left; origT = r.top - b.top;
         document.addEventListener('mousemove', move, {passive:false});
         document.addEventListener('mouseup', up, {passive:false});
         document.addEventListener('touchmove', move, {passive:false});
@@ -250,17 +168,13 @@
       const move = (e)=>{
         if(!dragging) return;
         e.preventDefault();
-        const p = pt(e);
-        const dx = p.x - startX;
-        const dy = p.y - startY;
+        const p = pt(e), dx = p.x-startX, dy = p.y-startY;
         const b = (boundsEl||el.parentElement).getBoundingClientRect();
         const r = el.getBoundingClientRect();
-        let L = origL + dx;
-        let T = origT + dy;
+        let L = origL+dx, T = origT+dy;
         L = Math.max(0, Math.min(L, b.width - r.width));
-        T = Math.max(0, Math.min(T,  b.height - r.height));
-        el.style.left = L + 'px';
-        el.style.top  = T + 'px';
+        T = Math.max(0, Math.min(T, b.height - r.height));
+        el.style.left = L+'px'; el.style.top = T+'px';
       };
 
       const up = ()=>{
@@ -269,41 +183,41 @@
         document.removeEventListener('mouseup', up);
         document.removeEventListener('touchmove', move);
         document.removeEventListener('touchend', up);
-        saveState(); // حفظ المواقع كما في كودك
+        saveState(); // حفظ تلقائي للمواقع والقيم
       };
 
       el.addEventListener('mousedown', down);
       el.addEventListener('touchstart', down, {passive:false});
     }
 
-    /* === ربط السحب بحدود صحيحة === */
+    /* ربط السحب */
     makeDraggable(topPlateEl, captureEl);
-    makeDraggable(carContEl,  captureEl);
-    makeDraggable(carPlateEl, captureEl);
-    makeDraggable(priceEl,    captureEl);
     makeDraggable(topCatZone, topPlateEl);
     makeDraggable(topNumZone, topPlateEl);
+    makeDraggable(carContEl,  captureEl);
+    makeDraggable(carPlateEl, captureEl);
     makeDraggable(carCatZone, carPlateEl);
     makeDraggable(carNumZone, carPlateEl);
+    makeDraggable(priceEl,    captureEl);
 
-    /* === تحديث نصوص === */
+    /* تحديث القيم النصية */
     function applyValues(cat, num, priceRaw){
-      const c = digitsOnly(cat) || '1';
-      const n = digitsOnly(num) || '12345';
+      const c = onlyDigits(cat) || '1';
+      const n = onlyDigits(num) || '12345';
       document.getElementById('topCategory').textContent = c;
       document.getElementById('bottomCategory').textContent = c;
       document.getElementById('topNumber').textContent = n;
       document.getElementById('bottomNumber').textContent = n;
-      const p = digitsOnly(priceRaw);
+
+      const p = onlyDigits(priceRaw);
       document.getElementById('platePrice').textContent = p ? priceFmt.format(Number(p)) + ' درهم' : '250,000 درهم';
+
       saveState();
     }
 
     function applyCarPreset(key){
       const preset = CAR_PRESETS[key];
-      if(!preset) return;
-      carImgEl.src = preset.img;
-      saveState();
+      if(preset){ carImgEl.src = preset.img; saveState(); }
     }
 
     document.getElementById('btnUpdate').onclick = ()=> applyValues(
@@ -312,19 +226,23 @@
       document.getElementById('inputPrice').value
     );
 
-    document.getElementById('btnDownload').onclick = ()=>{
-      html2canvas(captureEl,{backgroundColor:null,scale:2})
-        .then(c=>{
-          const a=document.createElement('a');
-          a.download='plate_design_9x16.png';
-          a.href=c.toDataURL('image/png');
-          a.click();
-        });
-    };
+    /* تحميل صورة بعد التأكد من تحميل الخط */
+    async function captureWithFonts(){
+      if(document.fonts && document.fonts.ready){
+        try{ await document.fonts.ready; }catch{}
+      }
+      html2canvas(captureEl,{backgroundColor:null,scale:2}).then(c=>{
+        const a=document.createElement('a');
+        a.download='plate_design.png';
+        a.href=c.toDataURL('image/png');
+        a.click();
+      });
+    }
+    document.getElementById('btnDownload').onclick = captureWithFonts;
 
     document.getElementById('carSelect').onchange = (e)=> applyCarPreset(e.target.value);
 
-    /* === حفظ/تحميل الحالة (مواضع + قيم) — كما في كودك === */
+    /* حفظ/تحميل الحالة (مواضع + قيم + السيارة) في localStorage */
     function saveState(){
       const box = (el)=> ({left:el.style.left, top:el.style.top, width:el.style.width, height:el.style.height});
       const data = {
@@ -350,9 +268,9 @@
     }
 
     function loadState(){
-      const raw = localStorage.getItem('plate_state');
-      if(!raw) return;
+      const raw = localStorage.getItem('plate_state'); if(!raw) return;
       const data = JSON.parse(raw);
+
       const applyBox = (el, b)=>{
         if(!el || !b) return;
         if(b.left)   el.style.left = b.left;
@@ -360,6 +278,7 @@
         if(b.width)  el.style.width = b.width;
         if(b.height) el.style.height= b.height;
       };
+
       applyBox(topPlateEl,  data.pos.topPlate);
       applyBox(topCatZone,  data.pos.topCatZone);
       applyBox(topNumZone,  data.pos.topNumZone);
@@ -374,162 +293,13 @@
       document.getElementById('topNumber').textContent    = data.vals.num || '12345';
       document.getElementById('bottomNumber').textContent = data.vals.num || '12345';
       document.getElementById('platePrice').textContent   = data.vals.price || '250,000 درهم';
+
       carImgEl.src = data.vals.carSrc || CAR_PRESETS.defender.img;
       if(data.vals.carKey) document.getElementById('carSelect').value = data.vals.carKey;
     }
 
-    // تحميل المواقع والقيم أولًا (من كودك)
+    /* تحميل الحالة عند فتح الصفحة */
     loadState();
-
-    /* ========= (إضافة) منطق لوحة القياسات ========= */
-    // helpers
-    const px = (n)=> Math.round(n) + 'px';
-    const setText = (id, val)=> document.getElementById(id).textContent = val;
-
-    function initSizeSliders(){
-      // قياسات ابتدائية من DOM
-      const r = (el)=> el.getBoundingClientRect();
-
-      // العلوية
-      document.getElementById('sl_topPlateW').value = Math.round(r(topPlateEl).width);
-      document.getElementById('sl_topPlateH').value = Math.round(r(topPlateEl).height);
-      setText('sp_topPlateW', px(r(topPlateEl).width));
-      setText('sp_topPlateH', px(r(topPlateEl).height));
-
-      document.getElementById('sl_topCatW').value = Math.round(r(topCatZone).width);
-      document.getElementById('sl_topCatH').value = Math.round(r(topCatZone).height);
-      document.getElementById('sl_topCatF').value = parseInt(getComputedStyle(document.getElementById('topCategory')).fontSize,10);
-      setText('sp_topCatW', px(r(topCatZone).width));
-      setText('sp_topCatH', px(r(topCatZone).height));
-      setText('sp_topCatF', px(parseInt(getComputedStyle(document.getElementById('topCategory')).fontSize,10)));
-
-      document.getElementById('sl_topNumW').value = Math.round(r(topNumZone).width);
-      document.getElementById('sl_topNumH').value = Math.round(r(topNumZone).height);
-      document.getElementById('sl_topNumF').value = parseInt(getComputedStyle(document.getElementById('topNumber')).fontSize,10);
-      setText('sp_topNumW', px(r(topNumZone).width));
-      setText('sp_topNumH', px(r(topNumZone).height));
-      setText('sp_topNumF', px(parseInt(getComputedStyle(document.getElementById('topNumber')).fontSize,10)));
-
-      // السيارة (عرض الصورة)
-      document.getElementById('sl_carImgW').value = Math.round(r(carImgEl).width);
-      setText('sp_carImgW', px(r(carImgEl).width));
-
-      // السفلية
-      document.getElementById('sl_carPlateW').value = Math.round(r(carPlateEl).width);
-      document.getElementById('sl_carPlateH').value = Math.round(r(carPlateEl).height);
-      setText('sp_carPlateW', px(r(carPlateEl).width));
-      setText('sp_carPlateH', px(r(carPlateEl).height));
-
-      document.getElementById('sl_carCatW').value = Math.round(r(carCatZone).width);
-      document.getElementById('sl_carCatH').value = Math.round(r(carCatZone).height);
-      document.getElementById('sl_carCatF').value = parseInt(getComputedStyle(document.getElementById('bottomCategory')).fontSize,10);
-      setText('sp_carCatW', px(r(carCatZone).width));
-      setText('sp_carCatH', px(r(carCatZone).height));
-      setText('sp_carCatF', px(parseInt(getComputedStyle(document.getElementById('bottomCategory')).fontSize,10)));
-
-      document.getElementById('sl_carNumW').value = Math.round(r(carNumZone).width);
-      document.getElementById('sl_carNumH').value = Math.round(r(carNumZone).height);
-      document.getElementById('sl_carNumF').value = parseInt(getComputedStyle(document.getElementById('bottomNumber')).fontSize,10);
-      setText('sp_carNumW', px(r(carNumZone).width));
-      setText('sp_carNumH', px(r(carNumZone).height));
-      setText('sp_carNumF', px(parseInt(getComputedStyle(document.getElementById('bottomNumber')).fontSize,10)));
-
-      // السعر
-      document.getElementById('sl_priceF').value = parseInt(getComputedStyle(priceEl).fontSize,10);
-      setText('sp_priceF', px(parseInt(getComputedStyle(priceEl).fontSize,10)));
-    }
-
-    // ربط السلايدرات
-    function bindSizeControls(){
-      // العلوية
-      document.getElementById('sl_topPlateW').oninput = (e)=>{ topPlateEl.style.width = px(e.target.value); setText('sp_topPlateW', px(e.target.value)); };
-      document.getElementById('sl_topPlateH').oninput = (e)=>{ topPlateEl.style.height= px(e.target.value); setText('sp_topPlateH', px(e.target.value)); };
-
-      document.getElementById('sl_topCatW').oninput = (e)=>{ topCatZone.style.width = px(e.target.value); setText('sp_topCatW', px(e.target.value)); };
-      document.getElementById('sl_topCatH').oninput = (e)=>{ topCatZone.style.height= px(e.target.value); setText('sp_topCatH', px(e.target.value)); };
-      document.getElementById('sl_topCatF').oninput = (e)=>{ document.getElementById('topCategory').style.fontSize = px(e.target.value); setText('sp_topCatF', px(e.target.value)); };
-
-      document.getElementById('sl_topNumW').oninput = (e)=>{ topNumZone.style.width = px(e.target.value); setText('sp_topNumW', px(e.target.value)); };
-      document.getElementById('sl_topNumH').oninput = (e)=>{ topNumZone.style.height= px(e.target.value); setText('sp_topNumH', px(e.target.value)); };
-      document.getElementById('sl_topNumF').oninput = (e)=>{ document.getElementById('topNumber').style.fontSize = px(e.target.value); setText('sp_topNumF', px(e.target.value)); };
-
-      // السيارة
-      document.getElementById('sl_carImgW').oninput = (e)=>{ carImgEl.style.width = px(e.target.value); setText('sp_carImgW', px(e.target.value)); };
-
-      // السفلية
-      document.getElementById('sl_carPlateW').oninput = (e)=>{ carPlateEl.style.width = px(e.target.value); setText('sp_carPlateW', px(e.target.value)); };
-      document.getElementById('sl_carPlateH').oninput = (e)=>{ carPlateEl.style.height= px(e.target.value); setText('sp_carPlateH', px(e.target.value)); };
-
-      document.getElementById('sl_carCatW').oninput = (e)=>{ carCatZone.style.width = px(e.target.value); setText('sp_carCatW', px(e.target.value)); };
-      document.getElementById('sl_carCatH').oninput = (e)=>{ carCatZone.style.height= px(e.target.value); setText('sp_carCatH', px(e.target.value)); };
-      document.getElementById('sl_carCatF').oninput = (e)=>{ document.getElementById('bottomCategory').style.fontSize = px(e.target.value); setText('sp_carCatF', px(e.target.value)); };
-
-      document.getElementById('sl_carNumW').oninput = (e)=>{ carNumZone.style.width = px(e.target.value); setText('sp_carNumW', px(e.target.value)); };
-      document.getElementById('sl_carNumH').oninput = (e)=>{ carNumZone.style.height= px(e.target.value); setText('sp_carNumH', px(e.target.value)); };
-      document.getElementById('sl_carNumF').oninput = (e)=>{ document.getElementById('bottomNumber').style.fontSize = px(e.target.value); setText('sp_carNumF', px(e.target.value)); };
-
-      // السعر
-      document.getElementById('sl_priceF').oninput = (e)=>{ priceEl.style.fontSize = px(e.target.value); setText('sp_priceF', px(e.target.value)); };
-    }
-
-    // حفظ/تحميل القياسات (منفصل عن حفظ المواقع)
-    function getSizes(){
-      return {
-        topPlate: { w: topPlateEl.style.width, h: topPlateEl.style.height },
-        topCat:   { w: topCatZone.style.width, h: topCatZone.style.height, f: getComputedStyle(document.getElementById('topCategory')).fontSize },
-        topNum:   { w: topNumZone.style.width, h: topNumZone.style.height, f: getComputedStyle(document.getElementById('topNumber')).fontSize },
-        carImg:   { w: carImgEl.style.width || (Math.round(carImgEl.getBoundingClientRect().width)+'px') },
-        carPlate: { w: carPlateEl.style.width, h: carPlateEl.style.height },
-        carCat:   { w: carCatZone.style.width, h: carCatZone.style.height, f: getComputedStyle(document.getElementById('bottomCategory')).fontSize },
-        carNum:   { w: carNumZone.style.width, h: carNumZone.style.height, f: getComputedStyle(document.getElementById('bottomNumber')).fontSize },
-        price:    { f: getComputedStyle(priceEl).fontSize }
-      };
-    }
-    function applySizes(sz){
-      if(!sz) return;
-      if(sz.topPlate){ if(sz.topPlate.w) topPlateEl.style.width = sz.topPlate.w; if(sz.topPlate.h) topPlateEl.style.height = sz.topPlate.h; }
-      if(sz.topCat){ if(sz.topCat.w) topCatZone.style.width = sz.topCat.w; if(sz.topCat.h) topCatZone.style.height = sz.topCat.h; if(sz.topCat.f) document.getElementById('topCategory').style.fontSize = sz.topCat.f; }
-      if(sz.topNum){ if(sz.topNum.w) topNumZone.style.width = sz.topNum.w; if(sz.topNum.h) topNumZone.style.height = sz.topNum.h; if(sz.topNum.f) document.getElementById('topNumber').style.fontSize = sz.topNum.f; }
-      if(sz.carImg){ if(sz.carImg.w) carImgEl.style.width = sz.carImg.w; }
-      if(sz.carPlate){ if(sz.carPlate.w) carPlateEl.style.width = sz.carPlate.w; if(sz.carPlate.h) carPlateEl.style.height = sz.carPlate.h; }
-      if(sz.carCat){ if(sz.carCat.w) carCatZone.style.width = sz.carCat.w; if(sz.carCat.h) carCatZone.style.height = sz.carCat.h; if(sz.carCat.f) document.getElementById('bottomCategory').style.fontSize = sz.carCat.f; }
-      if(sz.carNum){ if(sz.carNum.w) carNumZone.style.width = sz.carNum.w; if(sz.carNum.h) carNumZone.style.height = sz.carNum.h; if(sz.carNum.f) document.getElementById('bottomNumber').style.fontSize = sz.carNum.f; }
-      if(sz.price && sz.price.f){ priceEl.style.fontSize = sz.price.f; }
-    }
-    function saveSizes(){
-      localStorage.setItem('plate_sizes', JSON.stringify(getSizes()));
-    }
-    function loadSizes(){
-      const raw = localStorage.getItem('plate_sizes');
-      if(!raw) return;
-      try{
-        const sz = JSON.parse(raw);
-        applySizes(sz);
-      }catch{}
-    }
-
-    // أزرار القياسات
-    document.getElementById('btnSaveSizes').onclick = ()=> saveSizes();
-    document.getElementById('btnResetSizes').onclick = ()=>{
-      localStorage.removeItem('plate_sizes');
-      // إعادة القيم الافتراضية كما في HTML
-      topPlateEl.style.width='500px'; topPlateEl.style.height='110px';
-      topCatZone.style.width='120px'; topCatZone.style.height='94px'; document.getElementById('topCategory').style.fontSize='44px';
-      topNumZone.style.width='300px'; topNumZone.style.height='98px'; document.getElementById('topNumber').style.fontSize='78px';
-      carImgEl.style.width='500px';
-      carPlateEl.style.width='150px'; carPlateEl.style.height='35px';
-      // لاحظ: كانت نسب، نحولها لقيم تقريبية افتراضية
-      carCatZone.style.width='52px'; carCatZone.style.height='35px'; document.getElementById('bottomCategory').style.fontSize='10px';
-      carNumZone.style.width='93px'; carNumZone.style.height='35px'; document.getElementById('bottomNumber').style.fontSize='16px';
-      priceEl.style.fontSize='26px';
-      // تحديث قيم السلايدرات للعرض
-      initSizeSliders();
-    };
-
-    // تهيئة بعد تحميل الحالة
-    loadSizes();
-    initSizeSliders();
-    bindSizeControls();
   </script>
 </body>
 </html>
